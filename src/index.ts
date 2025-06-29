@@ -2,6 +2,10 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import { PrismaClient } from "@prisma/client";
+import userRoutes from "./routes/user.routes";
+import productRoutes from "./routes/product.routes";
+import categoryRoutes from "./routes/category.routes";
+import orderRoutes from "./routes/order.routes";
 
 dotenv.config();
 
@@ -15,34 +19,10 @@ app.get("/", (_, res) => {
   res.send("AgriConnect API is running ✅");
 });
 
-app.get("/users", async (_, res) => {
-  try {
-    const users = await prisma.user.findMany();
-    res.json(users);
-  } catch (err) {
-    console.error("❌ Error fetching users:", err);
-    res.status(500).json({ message: "Internal server error" });
-  }
-});
-
-app.post("/users", async (req, res) => {
-  try {
-    const { name, email, password, role, location } = req.body;
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password,
-        role,
-        location,
-      },
-    });
-    res.status(201).json(user);
-  } catch (err) {
-    console.error("❌ Error creating user:", err);
-    res.status(500).json({ message: "Could not create user" });
-  }
-});
+app.use("/api", userRoutes);
+app.use("/api", productRoutes)
+app.use("/categories", categoryRoutes)
+app.use("/orders", orderRoutes)
 
 const PORT = process.env.PORT || 4000;
 
@@ -52,7 +32,7 @@ async function startServer() {
     console.log("✅ Connected to PostgreSQL");
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server is running on http://localhost:${PORT}`);
+      console.log(`🚀 Server is running on ${PORT}`);
     });
   } catch (err) {
     console.error("❌ Failed to connect to DB:", err);
