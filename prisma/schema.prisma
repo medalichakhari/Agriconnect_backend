@@ -8,37 +8,40 @@ datasource db {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
+  id        String    @id @default(uuid())
   name      String
   email     String    @unique
   password  String
   role      Role
   location  String?
-  products  Product[] // For farmers
-  orders    Order[]   @relation("BuyerOrders") // For buyers
   createdAt DateTime  @default(now())
+  products  Product[] @relation("UserProducts")
+  orders    Order[]   @relation("BuyerOrders")
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
+  id          String    @id @default(uuid())
   name        String
-  description String
+  description String?
   price       Float
   quantity    Int
-  imageUrl    String
-  farmer      User     @relation(fields: [farmerId], references: [id])
-  farmerId    Int
-  orders      Order[]
-  createdAt   DateTime @default(now())
+  imageUrl    String?
+  ownerId     String
+  owner       User      @relation("UserProducts", fields: [ownerId], references: [id])
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime  @default(now())
+  orders      Order[]   @relation("ProductOrders")
 }
 
 model Order {
-  id        Int         @id @default(autoincrement())
-  product   Product     @relation(fields: [productId], references: [id])
-  productId Int
-  buyer     User        @relation(name: "BuyerOrders", fields: [buyerId], references: [id])
-  buyerId   Int
+  id        String      @id @default(uuid())
+  productId String
+  product   Product     @relation("ProductOrders", fields: [productId], references: [id])
+  buyerId   String
+  buyer     User        @relation("BuyerOrders", fields: [buyerId], references: [id])
   quantity  Int
+  total     Float
   status    OrderStatus @default(PENDING)
   createdAt DateTime    @default(now())
 }
@@ -50,6 +53,14 @@ enum Role {
 
 enum OrderStatus {
   PENDING
-  ACCEPTED
-  COMPLETED
+  CONFIRMED
+  DELIVERED
+  CANCELLED
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  products Product[]
+  createdAt DateTime  @default(now())
 }
