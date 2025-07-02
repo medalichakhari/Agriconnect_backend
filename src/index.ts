@@ -2,7 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import { PrismaClient } from "@prisma/client";
-import userRoutes from "./routes/user.routes";
+import userRoutes from "./routes/auth.routes";
 import productRoutes from "./routes/product.routes";
 import categoryRoutes from "./routes/category.routes";
 import orderRoutes from "./routes/order.routes";
