@@ -3,6 +3,6 @@ import { createOrder } from "../controllers/order.controller";
 
 const router = Router();
 
-router.post("/", createOrder);
+router.post("/orders", createOrder);
 
 export default router;

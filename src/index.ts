@@ -20,9 +20,9 @@ app.get("/", (_, res) => {
 });
 
 app.use("/api", userRoutes);
-app.use("/api", productRoutes)
-app.use("/categories", categoryRoutes)
-app.use("/orders", orderRoutes)
+app.use("/api", productRoutes);
+app.use("/api", categoryRoutes);
+app.use("/api", orderRoutes);
 
 const PORT = process.env.PORT || 4000;
 
