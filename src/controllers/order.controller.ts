@@ -7,7 +7,8 @@ export const createOrder = async (req: Request, res: Response) => {
 
     const product = await prisma.product.findUnique({ where: { id: productId } });
     if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+      res.status(404).json({ message: "Product not found" });
+      return;
     }
 
     const total = product.price * quantity;
@@ -21,11 +22,13 @@ export const createOrder = async (req: Request, res: Response) => {
       },
     });
 
-    return res.status(201).json(order);
+    res.status(201).json(order);
+    return;
   } catch (err) {
-    return res.status(500).json({
+    res.status(500).json({
       message: "❌ Error creating order",
       error: err instanceof Error ? err.message : err,
     });
+    return;
   }
 };
