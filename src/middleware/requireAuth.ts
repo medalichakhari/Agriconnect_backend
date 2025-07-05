@@ -1,35 +1,47 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { JwtUtil } from "../utils/jwt";
+import { AuthenticationError } from "../utils/errors";
+import { ResponseUtil } from "../utils/response";
+import { Role } from "../types";
 
-const JWT_SECRET = process.env.JWT_SECRET!;
-
-interface JwtPayload {
+interface AuthenticatedRequest extends Request {
   userId: string;
-  role: string;
+  role: Role;
 }
 
 export const requireAuth = (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
-) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader?.startsWith("Bearer ")) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
-
+): void => {
   try {
-    const token = authHeader.split(" ")[1];
-    const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const authHeader = req.headers.authorization;
+    const token = JwtUtil.extractTokenFromHeader(authHeader);
+    const payload = JwtUtil.verifyToken(token);
 
-    (req as any).userId = payload.userId;
-    (req as any).role = payload.role;
+    req.userId = payload.userId;
+    req.role = payload.role;
 
     next();
-  } catch {
-    res.status(401).json({ message: "Invalid token" });
-    return;
+  } catch (error) {
+    if (error instanceof AuthenticationError) {
+      res.status(401).json(ResponseUtil.error(error.message));
+      return;
+    }
+    res.status(401).json(ResponseUtil.error("Authentication failed"));
   }
+};
+
+export const requireRole = (roles: Role[]) => {
+  return (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): void => {
+    if (!req.role || !roles.includes(req.role)) {
+      res.status(403).json(ResponseUtil.error("Access forbidden"));
+      return;
+    }
+    next();
+  };
 };
