@@ -7,11 +7,11 @@ import healthRoutes from './health.routes';
 
 const router = Router();
 
-// Mount all routes
-router.use(healthRoutes);
-router.use(authRoutes);
-router.use(productRoutes);
-router.use(categoryRoutes);
-router.use(orderRoutes);
+// Mount all routes with proper prefixes
+router.use('/health', healthRoutes);
+router.use('/auth', authRoutes);
+router.use('/products', productRoutes);
+router.use('/categories', categoryRoutes);
+router.use('/orders', orderRoutes);
 
 export default router;

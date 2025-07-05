@@ -1,76 +1,99 @@
 import express from 'express';
 import cors from 'cors';
-import { config } from './config';
-import DatabaseManager from './database';
-import routes from './routes';
-import { errorHandler } from './middleware/errorHandler';
-import { requestLogger, notFound } from './middleware/common';
+import dotenv from 'dotenv';
+import { PrismaClient } from '@prisma/client';
+
+dotenv.config();
 
 class App {
   public app: express.Application;
+  private prisma: PrismaClient;
 
   constructor() {
     this.app = express();
+    this.prisma = new PrismaClient();
     this.initializeMiddlewares();
     this.initializeRoutes();
     this.initializeErrorHandling();
   }
 
   private initializeMiddlewares(): void {
-    // CORS configuration
-    const corsOptions = {
-      origin: config.ALLOWED_ORIGINS === '*' 
-        ? true 
-        : config.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()),
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    };
-
-    this.app.use(cors(corsOptions));
-    this.app.use(express.json({ limit: '10mb' }));
-    this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-    
-    // Request logging in development
-    if (config.NODE_ENV === 'development') {
-      this.app.use(requestLogger);
-    }
+    this.app.use(cors());
+    this.app.use(express.json());
+    this.app.use(express.urlencoded({ extended: true }));
   }
 
   private initializeRoutes(): void {
-    // Health check endpoint
+    // Basic health check only
     this.app.get('/', (_, res) => {
       res.json({
         success: true,
         message: 'AgriConnect API is running ✅',
-        version: process.env.npm_package_version || '1.0.0',
+        version: '1.0.0',
         timestamp: new Date().toISOString(),
       });
     });
 
-    // API routes
-    this.app.use(`${config.API_PREFIX}/${config.API_VERSION}`, routes);
+    // Simple test routes without external dependencies
+    this.app.get('/test', (_, res) => {
+      res.json({ message: 'Test route working' });
+    });
   }
 
   private initializeErrorHandling(): void {
     // 404 handler
-    this.app.use('*', notFound);
-    
+    this.app.use('*', (req, res) => {
+      res.status(404).json({
+        success: false,
+        message: `Route ${req.originalUrl} not found`,
+      });
+    });
+
     // Global error handler
-    this.app.use(errorHandler);
+    this.app.use(
+      (
+        error: Error,
+        req: express.Request,
+        res: express.Response,
+        next: express.NextFunction
+      ) => {
+        console.error('Error occurred:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Internal server error',
+        });
+      }
+    );
   }
 
   public async start(): Promise<void> {
     try {
-      // Connect to database
-      await DatabaseManager.connect();
+      const PORT = process.env.PORT || 4000;
+
+      // Try to connect to database (optional for development)
+      try {
+        await this.prisma.$connect();
+        console.log('✅ Connected to PostgreSQL');
+      } catch (dbError) {
+        console.log(
+          '⚠️  Database not available - starting in development mode without DB'
+        );
+        console.log(
+          '   To enable database, ensure PostgreSQL is running and DATABASE_URL is correct'
+        );
+      }
 
       // Start server
-      this.app.listen(config.PORT, () => {
-        console.log(`🚀 Server is running on port ${config.PORT}`);
-        console.log(`📚 API Documentation: http://localhost:${config.PORT}${config.API_PREFIX}/${config.API_VERSION}/info`);
-        console.log(`🏥 Health Check: http://localhost:${config.PORT}${config.API_PREFIX}/${config.API_VERSION}/health`);
-        console.log(`🌍 Environment: ${config.NODE_ENV}`);
+      this.app.listen(PORT, () => {
+        console.log(`🚀 Server is running on port ${PORT}`);
+        console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`📖 API Endpoints:`);
+        console.log(
+          `   GET  http://localhost:${PORT}/           - Health check`
+        );
+        console.log(
+          `   GET  http://localhost:${PORT}/test       - Test endpoint`
+        );
       });
 
       // Graceful shutdown
@@ -84,9 +107,9 @@ class App {
   private setupGracefulShutdown(): void {
     const shutdown = async (signal: string) => {
       console.log(`\n📤 Received ${signal}, shutting down gracefully...`);
-      
+
       try {
-        await DatabaseManager.disconnect();
+        await this.prisma.$disconnect();
         console.log('✅ Server shut down gracefully');
         process.exit(0);
       } catch (error) {
@@ -102,7 +125,7 @@ class App {
 
 // Start the application
 const app = new App();
-app.start().catch((error) => {
+app.start().catch(error => {
   console.error('❌ Failed to start application:', error);
   process.exit(1);
 });
