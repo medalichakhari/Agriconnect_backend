@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+import routes from './routes';
 
 dotenv.config();
 
@@ -33,6 +34,13 @@ class App {
         timestamp: new Date().toISOString(),
       });
     });
+
+    // Register all application routes
+
+    this.app.use(
+      `/${process.env.API_PREFIX}/${process.env.API_VERSION}`,
+      routes
+    );
 
     // Simple test routes without external dependencies
     this.app.get('/test', (_, res) => {
@@ -93,6 +101,22 @@ class App {
         );
         console.log(
           `   GET  http://localhost:${PORT}/test       - Test endpoint`
+        );
+        console.log(`   📁 API Routes available at /api:`);
+        console.log(
+          `   GET  http://localhost:${PORT}/api/health     - Health routes`
+        );
+        console.log(
+          `   POST http://localhost:${PORT}/api/auth       - Authentication routes`
+        );
+        console.log(
+          `   GET  http://localhost:${PORT}/api/products   - Product routes`
+        );
+        console.log(
+          `   GET  http://localhost:${PORT}/api/categories - Category routes`
+        );
+        console.log(
+          `   GET  http://localhost:${PORT}/api/orders     - Order routes`
         );
       });
 
