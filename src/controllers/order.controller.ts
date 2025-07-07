@@ -1,13 +1,15 @@
-import { Request, Response } from "express";
-import prisma from "../prisma/client";
+import { Request, Response } from 'express';
+import prisma from '../prisma/client';
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
-    const { productId, buyerId, quantity } = req.body;
+    const { productId, supplierId, quantity } = req.body;
 
-    const product = await prisma.product.findUnique({ where: { id: productId } });
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+    });
     if (!product) {
-      res.status(404).json({ message: "Product not found" });
+      res.status(404).json({ message: 'Product not found' });
       return;
     }
 
@@ -16,7 +18,7 @@ export const createOrder = async (req: Request, res: Response) => {
     const order = await prisma.order.create({
       data: {
         productId,
-        buyerId,
+        supplierId,
         quantity,
         total,
       },
@@ -26,7 +28,7 @@ export const createOrder = async (req: Request, res: Response) => {
     return;
   } catch (err) {
     res.status(500).json({
-      message: "❌ Error creating order",
+      message: '❌ Error creating order',
       error: err instanceof Error ? err.message : err,
     });
     return;

@@ -16,7 +16,7 @@ model User {
   location  String?
   createdAt DateTime  @default(now())
   products  Product[] @relation("UserProducts")
-  orders    Order[]   @relation("BuyerOrders")
+  orders    Order[]   @relation("SupplierOrders")
 }
 
 model Product {
@@ -38,8 +38,8 @@ model Order {
   id        String      @id @default(uuid())
   productId String
   product   Product     @relation("ProductOrders", fields: [productId], references: [id])
-  buyerId   String
-  buyer     User        @relation("BuyerOrders", fields: [buyerId], references: [id])
+  supplierId   String
+  supplier     User        @relation("SupplierOrders", fields: [supplierId], references: [id])
   quantity  Int
   total     Float
   status    OrderStatus @default(PENDING)
@@ -47,7 +47,7 @@ model Order {
 }
 
 enum Role {
-  BUYER
+  SUPPLIER
   FARMER
 }
 

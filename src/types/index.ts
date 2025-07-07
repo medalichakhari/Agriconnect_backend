@@ -1,13 +1,13 @@
 export enum Role {
-  BUYER = "BUYER",
-  FARMER = "FARMER",
+  SUPPLIER = 'SUPPLIER',
+  FARMER = 'FARMER',
 }
 
 export enum OrderStatus {
-  PENDING = "PENDING",
-  CONFIRMED = "CONFIRMED",
-  DELIVERED = "DELIVERED",
-  CANCELLED = "CANCELLED",
+  PENDING = 'PENDING',
+  CONFIRMED = 'CONFIRMED',
+  DELIVERED = 'DELIVERED',
+  CANCELLED = 'CANCELLED',
 }
 
 export interface User {
@@ -40,7 +40,7 @@ export interface Category {
 export interface Order {
   id: string;
   productId: string;
-  buyerId: string;
+  supplierId: string;
   quantity: number;
   total: number;
   status: OrderStatus;
@@ -56,7 +56,7 @@ export interface PaginationQuery {
   page?: number;
   limit?: number;
   sortBy?: string;
-  sortOrder?: "asc" | "desc";
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface ApiResponse<T = any> {

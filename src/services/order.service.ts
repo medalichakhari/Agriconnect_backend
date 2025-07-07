@@ -1,12 +1,19 @@
 import { prisma } from '../database';
-import { NotFoundError, AuthorizationError, ValidationError } from '../utils/errors';
+import {
+  NotFoundError,
+  AuthorizationError,
+  ValidationError,
+} from '../utils/errors';
 import { Order, OrderStatus, Role } from '../types';
-import { calculatePagination, validatePaginationParams } from '../utils/helpers';
+import {
+  calculatePagination,
+  validatePaginationParams,
+} from '../utils/helpers';
 
 export class OrderService {
   static async create(
     data: { productId: string; quantity: number },
-    buyerId: string
+    supplierId: string
   ): Promise<Order> {
     const product = await prisma.product.findUnique({
       where: { id: data.productId },
@@ -26,7 +33,7 @@ export class OrderService {
       prisma.order.create({
         data: {
           productId: data.productId,
-          buyerId,
+          supplierId,
           quantity: data.quantity,
           total,
         },
@@ -34,7 +41,7 @@ export class OrderService {
           product: {
             select: { id: true, name: true, price: true },
           },
-          buyer: {
+          supplier: {
             select: { id: true, name: true, email: true },
           },
         },
@@ -57,7 +64,7 @@ export class OrderService {
       page?: number;
       limit?: number;
       status?: OrderStatus;
-      buyerId?: string;
+      supplierId?: string;
       productId?: string;
       sortBy?: string;
       sortOrder?: 'asc' | 'desc';
@@ -71,8 +78,8 @@ export class OrderService {
     const where: any = {};
 
     // Role-based filtering
-    if (userRole === Role.BUYER) {
-      where.buyerId = userId;
+    if (userRole === Role.SUPPLIER) {
+      where.supplierId = userId;
     } else if (userRole === Role.FARMER) {
       where.product = {
         ownerId: userId,
@@ -83,8 +90,8 @@ export class OrderService {
       where.status = query.status;
     }
 
-    if (query.buyerId) {
-      where.buyerId = query.buyerId;
+    if (query.supplierId) {
+      where.supplierId = query.supplierId;
     }
 
     if (query.productId) {
@@ -108,7 +115,7 @@ export class OrderService {
           product: {
             select: { id: true, name: true, price: true },
           },
-          buyer: {
+          supplier: {
             select: { id: true, name: true, email: true },
           },
         },
@@ -119,7 +126,11 @@ export class OrderService {
     return { orders, total, page, limit };
   }
 
-  static async getById(orderId: string, userId: string, userRole: Role): Promise<Order> {
+  static async getById(
+    orderId: string,
+    userId: string,
+    userRole: Role
+  ): Promise<Order> {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -130,7 +141,7 @@ export class OrderService {
             },
           },
         },
-        buyer: {
+        supplier: {
           select: { id: true, name: true, email: true },
         },
       },
@@ -141,7 +152,7 @@ export class OrderService {
     }
 
     // Check authorization
-    const isOwner = order.buyerId === userId;
+    const isOwner = order.supplierId === userId;
     const isProductOwner = order.product.ownerId === userId;
 
     if (!isOwner && !isProductOwner) {
@@ -170,11 +181,16 @@ export class OrderService {
 
     // Only product owner (farmer) can update order status
     if (order.product.ownerId !== userId) {
-      throw new AuthorizationError('Only the product owner can update order status');
+      throw new AuthorizationError(
+        'Only the product owner can update order status'
+      );
     }
 
     // Validate status transitions
-    if (order.status === OrderStatus.CANCELLED || order.status === OrderStatus.DELIVERED) {
+    if (
+      order.status === OrderStatus.CANCELLED ||
+      order.status === OrderStatus.DELIVERED
+    ) {
       throw new ValidationError('Cannot update status of completed orders');
     }
 
@@ -185,7 +201,7 @@ export class OrderService {
         product: {
           select: { id: true, name: true, price: true },
         },
-        buyer: {
+        supplier: {
           select: { id: true, name: true, email: true },
         },
       },
@@ -194,7 +210,11 @@ export class OrderService {
     return updatedOrder as any;
   }
 
-  static async cancel(orderId: string, userId: string, userRole: Role): Promise<Order> {
+  static async cancel(
+    orderId: string,
+    userId: string,
+    userRole: Role
+  ): Promise<Order> {
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
@@ -206,8 +226,8 @@ export class OrderService {
       throw new NotFoundError('Order not found');
     }
 
-    // Only buyer can cancel their own order or farmer can cancel orders for their products
-    const isOwner = order.buyerId === userId;
+    // Only supplier can cancel their own order or farmer can cancel orders for their products
+    const isOwner = order.supplierId === userId;
     const isProductOwner = order.product.ownerId === userId;
 
     if (!isOwner && !isProductOwner) {
@@ -230,7 +250,7 @@ export class OrderService {
           product: {
             select: { id: true, name: true, price: true },
           },
-          buyer: {
+          supplier: {
             select: { id: true, name: true, email: true },
           },
         },

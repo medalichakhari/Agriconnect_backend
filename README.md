@@ -1,6 +1,6 @@
 # AgriConnect Backend
 
-A modern, scalable backend API for connecting farmers and buyers in an agricultural marketplace.
+A modern, scalable backend API for connecting farmers and suppliers in an agricultural marketplace.
 
 ## 🚀 Features
 
@@ -76,22 +76,26 @@ src/
 ## 🔧 Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/medalichakhari/Agriconnect_backend.git
    cd Agriconnect_backend
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Edit `.env` with your configuration:
+
    ```env
    DATABASE_URL="postgresql://username:password@localhost:5432/agriconnect"
    JWT_SECRET="your-super-secret-jwt-key-here"
@@ -101,10 +105,11 @@ src/
    ```
 
 4. **Set up the database**
+
    ```bash
    # Generate Prisma client
    npm run prisma:generate
-   
+
    # Run migrations
    npm run prisma:migrate
    ```
@@ -117,12 +122,14 @@ src/
 ## 🚀 API Endpoints
 
 ### Authentication
+
 - `POST /api/v1/auth/register` - Register a new user
 - `POST /api/v1/auth/login` - Login user
 - `GET /api/v1/auth/profile` - Get user profile
 - `PUT /api/v1/auth/profile` - Update user profile
 
 ### Products
+
 - `GET /api/v1/products` - Get all products (with pagination, search, filters)
 - `GET /api/v1/products/:id` - Get product by ID
 - `POST /api/v1/products` - Create new product (farmers only)
@@ -130,6 +137,7 @@ src/
 - `DELETE /api/v1/products/:id` - Delete product (owner only)
 
 ### Categories
+
 - `GET /api/v1/categories` - Get all categories
 - `GET /api/v1/categories/:id` - Get category by ID
 - `POST /api/v1/categories` - Create new category
@@ -137,6 +145,7 @@ src/
 - `DELETE /api/v1/categories/:id` - Delete category
 
 ### Orders
+
 - `GET /api/v1/orders` - Get user's orders
 - `GET /api/v1/orders/:id` - Get order by ID
 - `POST /api/v1/orders` - Create new order
@@ -144,6 +153,7 @@ src/
 - `PUT /api/v1/orders/:id/cancel` - Cancel order
 
 ### Health
+
 - `GET /api/v1/health` - Health check
 - `GET /api/v1/info` - API information
 
@@ -156,8 +166,9 @@ Authorization: Bearer <your-jwt-token>
 ```
 
 ### User Roles
+
 - **FARMER**: Can create, update, delete products; manage orders for their products
-- **BUYER**: Can browse products, place orders, view their orders
+- **SUPPLIER**: Can browse products, place orders, view their orders
 
 ## 📊 Database Schema
 
@@ -166,7 +177,7 @@ The application uses PostgreSQL with Prisma ORM. Key models include:
 - **User**: User accounts with roles
 - **Product**: Agricultural products with details
 - **Category**: Product categories
-- **Order**: Order transactions between buyers and farmers
+- **Order**: Order transactions between suppliers and farmers
 
 ## 🛡️ Error Handling
 
@@ -232,14 +243,14 @@ npm run dev:docker
 
 ## 🔄 Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | Required |
-| `JWT_SECRET` | JWT signing secret | Required |
-| `JWT_EXPIRES_IN` | JWT expiration time | `7d` |
-| `PORT` | Server port | `4000` |
-| `NODE_ENV` | Environment mode | `development` |
-| `ALLOWED_ORIGINS` | CORS allowed origins | `*` |
+| Variable          | Description                  | Default       |
+| ----------------- | ---------------------------- | ------------- |
+| `DATABASE_URL`    | PostgreSQL connection string | Required      |
+| `JWT_SECRET`      | JWT signing secret           | Required      |
+| `JWT_EXPIRES_IN`  | JWT expiration time          | `7d`          |
+| `PORT`            | Server port                  | `4000`        |
+| `NODE_ENV`        | Environment mode             | `development` |
+| `ALLOWED_ORIGINS` | CORS allowed origins         | `*`           |
 
 ## 🤝 Contributing
 
@@ -255,7 +266,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Authors
 
-- **Your Name** - *Initial work* - [YourGitHub](https://github.com/yourusername)
+- **Your Name** - _Initial work_ - [YourGitHub](https://github.com/yourusername)
 
 ## 🙏 Acknowledgments
 

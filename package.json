@@ -1,7 +1,7 @@
 {
   "name": "agriconnect_backend",
   "version": "1.0.0",
-  "description": "Backend API for AgriConnect - Agricultural marketplace connecting farmers and buyers",
+  "description": "Backend API for AgriConnect - Agricultural marketplace connecting farmers and suppliers",
   "main": "dist/index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only --no-notify --ignore-watch node_modules src/index.ts",
@@ -25,7 +25,7 @@
   "keywords": [
     "agriculture",
     "marketplace",
-    "farmers",
+    "suppliers",
     "nodejs",
     "typescript",
     "prisma",
