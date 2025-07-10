@@ -1,12 +1,12 @@
-import bcrypt from "bcrypt";
-import { prisma } from "../database";
-import { JwtUtil } from "../utils/jwt";
+import bcrypt from 'bcrypt';
+import { prisma } from '../database';
+import { JwtUtil } from '../utils/jwt';
 import {
   ConflictError,
   AuthenticationError,
   NotFoundError,
-} from "../utils/errors";
-import { User, Role } from "../types";
+} from '../utils/errors';
+import { User, Role } from '../types';
 
 export class AuthService {
   static async register(data: {
@@ -15,21 +15,24 @@ export class AuthService {
     password: string;
     role: Role;
     location?: string;
-  }): Promise<{ user: Omit<User, "password">; token: string }> {
+  }): Promise<{ user: Omit<User, 'password'>; token: string }> {
     const existingUser = await prisma.user.findUnique({
       where: { email: data.email },
     });
 
     if (existingUser) {
-      throw new ConflictError("User already exists with this email");
+      throw new ConflictError('User already exists with this email');
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 12);
 
     const user = await prisma.user.create({
       data: {
-        ...data,
+        name: data.name,
+        email: data.email,
         password: hashedPassword,
+        role: data.role as any, // Cast to Prisma enum
+        location: data.location,
       },
       select: {
         id: true,
@@ -46,25 +49,25 @@ export class AuthService {
       role: user.role as Role,
     });
 
-    return { user, token };
+    return { user: user as any, token };
   }
 
   static async login(data: {
     email: string;
     password: string;
-  }): Promise<{ user: Omit<User, "password">; token: string }> {
+  }): Promise<{ user: Omit<User, 'password'>; token: string }> {
     const user = await prisma.user.findUnique({
       where: { email: data.email },
     });
 
     if (!user) {
-      throw new AuthenticationError("Invalid email or password");
+      throw new AuthenticationError('Invalid email or password');
     }
 
     const isPasswordValid = await bcrypt.compare(data.password, user.password);
 
     if (!isPasswordValid) {
-      throw new AuthenticationError("Invalid email or password");
+      throw new AuthenticationError('Invalid email or password');
     }
 
     const token = JwtUtil.generateToken({
@@ -74,10 +77,10 @@ export class AuthService {
 
     const { password, ...userWithoutPassword } = user;
 
-    return { user: userWithoutPassword, token };
+    return { user: userWithoutPassword as any, token };
   }
 
-  static async getUserById(userId: string): Promise<Omit<User, "password">> {
+  static async getUserById(userId: string): Promise<Omit<User, 'password'>> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -91,16 +94,16 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundError("User not found");
+      throw new NotFoundError('User not found');
     }
 
-    return user;
+    return user as any;
   }
 
   static async updateUser(
     userId: string,
     data: { name?: string; location?: string }
-  ): Promise<Omit<User, "password">> {
+  ): Promise<Omit<User, 'password'>> {
     const user = await prisma.user.update({
       where: { id: userId },
       data,
@@ -114,6 +117,6 @@ export class AuthService {
       },
     });
 
-    return user;
+    return user as any;
   }
 }

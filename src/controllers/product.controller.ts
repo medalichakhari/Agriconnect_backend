@@ -1,41 +1,122 @@
-import { Request, Response } from "express";
-import prisma from "../prisma/client";
+import { Request, Response } from 'express';
+import { ProductService } from '../services/product.service';
+import { handleError } from '../utils/response';
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
-    const { name, description, category, price, quantity, imageUrl, ownerId } = req.body;
+    const { name, description, price, quantity, imageUrl, categoryId } =
+      req.body;
+    const ownerId = req.user?.userId;
 
-    const product = await prisma.product.create({
-      data: {
+    if (!ownerId) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const product = await ProductService.create(
+      {
         name,
         description,
-        category,
         price,
         quantity,
         imageUrl,
-        ownerId,
+        categoryId,
       },
-    });
+      ownerId
+    );
 
-    res.status(201).json(product);
+    res.status(201).json({
+      message: 'Product created successfully',
+      data: product,
+    });
   } catch (error) {
-    console.error("❌ Error creating product:", error);
-    res.status(500).json({ error: "Failed to create product" });
+    handleError(res, error);
   }
 };
 
 export const getAllProducts = async (req: Request, res: Response) => {
   try {
-    const products = await prisma.product.findMany({
-      include: {
-        owner: {
-          select: { id: true, name: true, location: true },
-        },
+    const result = await ProductService.getAll(req.query);
+    res.json({
+      message: 'Products retrieved successfully',
+      data: result.products,
+      meta: {
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / result.limit),
       },
     });
-    res.json(products);
   } catch (error) {
-    console.error("❌ Error fetching products:", error);
-    res.status(500).json({ error: "Failed to fetch products" });
+    handleError(res, error);
+  }
+};
+
+export const getProductById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const product = await ProductService.getById(id);
+    res.json({
+      message: 'Product retrieved successfully',
+      data: product,
+    });
+  } catch (error) {
+    handleError(res, error);
+  }
+};
+
+export const updateProduct = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, description, price, quantity, imageUrl, categoryId } =
+      req.body;
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId || !userRole) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const product = await ProductService.update(
+      id,
+      {
+        name,
+        description,
+        price,
+        quantity,
+        imageUrl,
+        categoryId,
+      },
+      userId,
+      userRole
+    );
+
+    res.json({
+      message: 'Product updated successfully',
+      data: product,
+    });
+  } catch (error) {
+    handleError(res, error);
+  }
+};
+
+export const deleteProduct = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId || !userRole) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    await ProductService.delete(id, userId, userRole);
+    res.json({
+      message: 'Product deleted successfully',
+    });
+  } catch (error) {
+    handleError(res, error);
   }
 };

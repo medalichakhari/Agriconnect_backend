@@ -1,36 +1,121 @@
 import { Request, Response } from 'express';
-import prisma from '../prisma/client';
+import { OrderService } from '../services/order.service';
+import { handleError } from '../utils/response';
+import { OrderStatus } from '../types';
 
 export const createOrder = async (req: Request, res: Response) => {
   try {
-    const { productId, supplierId, quantity } = req.body;
+    const { productId, quantity } = req.body;
+    const supplierId = req.user?.userId;
 
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-    });
-    if (!product) {
-      res.status(404).json({ message: 'Product not found' });
+    if (!supplierId) {
+      res.status(401).json({ message: 'Unauthorized' });
       return;
     }
 
-    const total = product.price * quantity;
-
-    const order = await prisma.order.create({
-      data: {
+    const order = await OrderService.create(
+      {
         productId,
-        supplierId,
         quantity,
-        total,
+      },
+      supplierId
+    );
+
+    res.status(201).json({
+      message: 'Order created successfully',
+      data: order,
+    });
+  } catch (err) {
+    handleError(res, err);
+  }
+};
+
+export const getOrders = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId || !userRole) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const result = await OrderService.getAll(req.query, userId, userRole);
+    res.json({
+      message: 'Orders retrieved successfully',
+      data: result.orders,
+      meta: {
+        page: result.page,
+        limit: result.limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / result.limit),
       },
     });
-
-    res.status(201).json(order);
-    return;
   } catch (err) {
-    res.status(500).json({
-      message: '❌ Error creating order',
-      error: err instanceof Error ? err.message : err,
+    handleError(res, err);
+  }
+};
+
+export const getOrderById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId || !userRole) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const order = await OrderService.getById(id, userId, userRole);
+    res.json({
+      message: 'Order retrieved successfully',
+      data: order,
     });
-    return;
+  } catch (err) {
+    handleError(res, err);
+  }
+};
+
+export const updateOrderStatus = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId || !userRole) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const order = await OrderService.updateStatus(id, status, userId, userRole);
+    res.json({
+      message: 'Order status updated successfully',
+      data: order,
+    });
+  } catch (err) {
+    handleError(res, err);
+  }
+};
+
+export const cancelOrder = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.userId;
+    const userRole = req.user?.role;
+
+    if (!userId || !userRole) {
+      res.status(401).json({ message: 'Unauthorized' });
+      return;
+    }
+
+    const order = await OrderService.cancel(id, userId, userRole);
+    res.json({
+      message: 'Order cancelled successfully',
+      data: order,
+    });
+  } catch (err) {
+    handleError(res, err);
   }
 };

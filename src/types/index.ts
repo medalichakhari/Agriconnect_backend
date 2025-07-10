@@ -1,3 +1,5 @@
+import { Request } from 'express';
+
 export enum Role {
   SUPPLIER = 'SUPPLIER',
   FARMER = 'FARMER',
@@ -77,4 +79,16 @@ export interface JwtPayload {
   role: Role;
   iat?: number;
   exp?: number;
+}
+
+export interface AuthenticatedRequest extends Request {
+  user?: AuthUser;
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AuthUser;
+    }
+  }
 }

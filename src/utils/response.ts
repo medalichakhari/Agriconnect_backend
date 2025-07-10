@@ -1,7 +1,9 @@
-import { ApiResponse } from "../types";
+import { Response } from 'express';
+import { ApiResponse } from '../types';
+import { AppError } from './errors';
 
 export class ResponseUtil {
-  static success<T>(data: T, message = "Success", meta?: any): ApiResponse<T> {
+  static success<T>(data: T, message = 'Success', meta?: any): ApiResponse<T> {
     return {
       success: true,
       message,
@@ -23,7 +25,7 @@ export class ResponseUtil {
     page: number,
     limit: number,
     total: number,
-    message = "Data retrieved successfully"
+    message = 'Data retrieved successfully'
   ): ApiResponse<T[]> {
     const totalPages = Math.ceil(total / limit);
 
@@ -40,3 +42,13 @@ export class ResponseUtil {
     };
   }
 }
+
+export const handleError = (res: Response, error: any): void => {
+  if (error instanceof AppError) {
+    res.status(error.statusCode).json(ResponseUtil.error(error.message));
+    return;
+  }
+
+  console.error('Unexpected error:', error);
+  res.status(500).json(ResponseUtil.error('Internal server error'));
+};
